@@ -45,6 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $categories = $pdo->query('SELECT id, name FROM categories ORDER BY name')->fetchAll();
 $manageProducts = $pdo->query('SELECT products.id, products.name, products.price, products.category_id, categories.name AS category_name FROM products JOIN categories ON categories.id = products.category_id ORDER BY products.id DESC')->fetchAll();
+$selectedCategory = (int)($_GET['category'] ?? 0);
 
 include __DIR__ . '/includes/header.php';
 ?>
@@ -58,7 +59,9 @@ include __DIR__ . '/includes/header.php';
       <select id="categorySelect">
         <option value="">All</option>
         <?php foreach ($categories as $category): ?>
-          <option value="<?php echo $category['id']; ?>"><?php echo htmlspecialchars($category['name']); ?></option>
+          <option value="<?php echo $category['id']; ?>" <?php echo $selectedCategory === (int)$category['id'] ? 'selected' : ''; ?>>
+            <?php echo htmlspecialchars($category['name']); ?>
+          </option>
         <?php endforeach; ?>
       </select>
     </label>

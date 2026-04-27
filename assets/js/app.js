@@ -7,6 +7,7 @@ const minPrice = document.querySelector('#minPrice');
 const maxPrice = document.querySelector('#maxPrice');
 const minPriceValue = document.querySelector('#minPriceValue');
 const maxPriceValue = document.querySelector('#maxPriceValue');
+const cartCount = document.querySelector('#cartCount');
 
 const loginForm = document.querySelector('#loginForm');
 const registerForm = document.querySelector('#registerForm');
@@ -79,7 +80,10 @@ async function loadProducts() {
         <h3>${product.name}</h3>
         <p class="price">$${product.price}</p>
         <p class="category">${product.category_name}</p>
-        <button class="btn ghost" type="button">Add to cart</button>
+        <div class="card-actions">
+          <a class="btn ghost" href="product.php?id=${product.id}">View</a>
+          <button class="btn" type="button" data-add-to-cart="${product.id}">Add to cart</button>
+        </div>
       </article>
     `;
   }).join('');
@@ -104,6 +108,26 @@ function showMessage(target, message, isError) {
   }
   target.textContent = message;
   target.classList.toggle('error', Boolean(isError));
+}
+
+function updateCartCount(count) {
+  if (!cartCount) {
+    return;
+  }
+  cartCount.textContent = count;
+}
+
+async function addToCart(productId) {
+  const response = await fetch('api/cart_add.php', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: `product_id=${encodeURIComponent(productId)}`,
+  });
+  const data = await response.json();
+  updateCartCount(data.count);
+  showMessage(productMessage, 'Added to cart.', false);
 }
 
 async function checkEmailAvailability(email) {
@@ -166,15 +190,14 @@ if (registerForm) {
       return;
     }
 
-    showMessage(message, 'Registration ready to submit (demo only).', false);
+    registerForm.submit();
   });
 }
 
 if (loginForm) {
-  loginForm.addEventListener('submit', (event) => {
-    event.preventDefault();
+  loginForm.addEventListener('submit', () => {
     const message = document.querySelector('#loginMessage');
-    showMessage(message, 'Login demo: connect to backend logic next.', false);
+    showMessage(message, '', false);
   });
 }
 
@@ -182,3 +205,15 @@ if (productGrid) {
   attachProductListeners();
   loadProducts();
 }
+
+document.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-add-to-cart]');
+  if (!button) {
+    return;
+  }
+  event.preventDefault();
+  const productId = button.getAttribute('data-add-to-cart');
+  if (productId) {
+    addToCart(productId);
+  }
+});
